@@ -1,4 +1,4 @@
-# Voyager: An Open-Ended Embodied Agent with Large Language Models
+# Voyager Containerized: An Open-Ended Embodied Agent with Large Language Models (with Docker & Podman support!)
 <div align="center">
 
 [[Website]](https://voyager.minedojo.org/)
@@ -14,7 +14,6 @@ ______________________________________________________________________
 https://github.com/MineDojo/Voyager/assets/25460983/ce29f45b-43a5-4399-8fd8-5dd105fd64f2
 
 ![](images/pull.png)
-
 
 </div>
 
@@ -37,7 +36,16 @@ solve novel tasks from scratch, while other techniques struggle to generalize.
 
 In this repo, we provide Voyager code. This codebase is under [MIT License](LICENSE).
 
-# Installation
+# Installation (Recommended)
+```
+Docker build -t voyager .
+```
+
+```
+Podman build --format docker -t voyager .
+```
+
+# Installation (Manual)
 Voyager requires Python ≥ 3.9 and Node.js ≥ 16.13.0. We have tested on Ubuntu 20.04, Windows 11, and macOS. You need to follow the instructions below to install Voyager.
 
 ## Python Install
