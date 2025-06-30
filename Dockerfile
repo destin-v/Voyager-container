@@ -1,11 +1,29 @@
 #===================================================
 # Docker for MineCraft Voyager.
 # 
+# Build:
+# >>> podman build --format docker -t voyager .
+#
+# Run:
+# ============
+# Host:
+# >>> podman run -it --rm --device nvidia.com/gpu=all --net=host --env="DISPLAY" --volume="$HOME/.Xauthority:/root/.Xauthority:rw" voyager bash
+# 
+# Inside container:
+# >>> minecraft-launcher
+#
+# Description:
+# ============
 # [x] Add miniconda package manager
 # [x] Add pipx package manager
-# [x] Add oh-my-posh terminal
 # [x] Add vim awesome
 # [x] Add nodeJS manager
+# 
+# References:
+# ===========
+# * https://ubuntu.com/tutorials/install-jre#2-installing-openjdk-jre
+# * https://dzone.com/articles/docker-x11-client-via-ssh
+# * https://datawookie.dev/blog/2023/12/minecraft-client-on-ubuntu/
 #====================================================
 
 FROM ubuntu:22.04
@@ -18,15 +36,18 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN apt -y update &&\ 
     apt -y upgrade &&\
     apt -y install \
-        build-essential \
-        curl \
-        git \
-        htop \
-        nodejs \
-        pipx \
-        unzip \
-        wget \
-        vim &&\
+    build-essential \
+    curl \
+    default-jre \
+    git \
+    htop \
+    libopengl0 \
+    nodejs \
+    pipx \
+    unzip \
+    wget \
+    vim \
+    x11-apps &&\
     apt -y clean
 
 # Install pipx
@@ -34,8 +55,6 @@ RUN pipx ensurepath
 RUN pipx install nvitop
 
 WORKDIR /root
-
-# Install nvm
 
 # replace shell with bash so we can source files
 RUN rm /bin/sh && ln -s /bin/bash /bin/sh
@@ -62,7 +81,6 @@ ENV PATH $NVM_DIR/versions/node/v$NODE_VERSION/bin:$PATH
 RUN node -v
 RUN npm -v
 
-
 # Install Miniconda on x86 or ARM platforms
 ENV PATH="/root/miniconda3/bin:${PATH}"
 ARG PATH="/root/miniconda3/bin:${PATH}"
@@ -86,19 +104,31 @@ RUN conda --version
 RUN conda create -n myenv python=3.10
 SHELL ["conda", "run", "-n", "myenv", "/bin/bash", "-c"]
 
+# Copy Git repo
 COPY ./ /root/Voyager/
-#RUN git clone https://github.com/MineDojo/Voyager
-RUN cd Voyager && pip install -e .
+WORKDIR /root/Voyager
+RUN pip install -e .
 
 WORKDIR /root/Voyager/voyager/env/mineflayer
-#RUN npm install -g npx
 RUN npm install --no-audit
 
+# Install Typescript
 WORKDIR /root/Voyager/voyager/env/mineflayer/mineflayer-collectblock
-#RUN npm uninstall --no-audit tsc
 RUN npm install typescript --no-audit
 RUN npx tsc
 
+# Install Mineflayer
 WORKDIR /root/Voyager/voyager/env/mineflayer
 RUN npm install --no-audit
 
+# Setup MineCraft client
+WORKDIR /root/
+RUN wget https://launcher.mojang.com/download/Minecraft.deb
+RUN dpkg -i Minecraft.deb; exit 0
+RUN apt --fix-broken install -y
+RUN ls -alh
+RUN dpkg -i Minecraft.deb
+
+# Install Fabric
+RUN curl -O https://maven.fabricmc.net/net/fabricmc/fabric-installer/0.11.2/fabric-installer-0.11.2.jar
+RUN java -jar fabric-installer-0.11.2.jar
